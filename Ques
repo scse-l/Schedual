@@ -1,0 +1,3 @@
+修改准备：
+1. 修改结构定义名称：struct waitqueue -> struct queue_tag
+   理由:不易理解，job与waitqueue的结构定义混乱
