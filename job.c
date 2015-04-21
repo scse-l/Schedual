@@ -169,24 +169,33 @@ void sig_handler(int sig,siginfo_t *info,void *notused)
 	int ret;
 
 	switch (sig) {
-case SIGVTALRM: /* 到达计时器所设置的计时间隔 */
-	scheduler();
-	return;
-case SIGCHLD: /* 子进程结束时传送给父进程的信号 */
-	ret = waitpid(-1,&status,WNOHANG);
-	if (ret == 0)
-		return;
-	if(WIFEXITED(status)){
-		current->job->state = DONE;
-		printf("normal termation, exit status = %d\n",WEXITSTATUS(status));
-	}else if (WIFSIGNALED(status)){
-		printf("abnormal termation, signal number = %d\n",WTERMSIG(status));
-	}else if (WIFSTOPPED(status)){
-		printf("child stopped, signal number = %d\n",WSTOPSIG(status));
-	}
-	return;
-	default:
-		return;
+		case SIGVTALRM: /* 到达计时器所设置的计时间隔 */
+			scheduler();
+			return;
+		case SIGCHLD: /* 子进程结束时传送给父进程的信号 */
+			ret = waitpid(-1,&status,WNOHANG);//WNOHANG 若pid指定的子进程没有结束，则waitpid()函数返回0，不予以等待。若结束，则返回该子进程的ID。
+			if (ret == 0)//pid指定的子进程没有结束
+				return;
+			//WIFEXITED：子进程正常退出（"exit"或"_exit"），此宏返回非0
+			//WEXITSTATUS(status)：当WIFEXITED返回非零值时，可以用这个宏来提取子进程的返回值
+			if(WIFEXITED(status)){
+				//子进程正常退出了
+				current->job->state = DONE;
+				printf("normal termation, exit status = %d\n",WEXITSTATUS(status));
+			//WIFSIGNALED(int status):如果子进程是因为信号而结束则此宏值为真
+			//WTERMSIG(status)：当WIFSIGNALED为真时，可以用这个宏来取得取得子进程因信号而中止的信号代码
+			}else if (WIFSIGNALED(status)){
+				//子进程是因为信号而结束
+				printf("abnormal termation, signal number = %d\n",WTERMSIG(status));
+			//WIFSTOPPED：若为当前正处于暂停状态的子进程返回的状态，则为真
+			//WSTOPSIG：当WIFSTOPPED为真时，可通过这个宏来取得使子进程暂停的信号编号
+			}else if (WIFSTOPPED(status)){
+				//子进程当前正处于暂停状态
+				printf("child stopped, signal number = %d\n",WSTOPSIG(status));
+			}
+			return;
+			default:
+				return;
 	}
 }
 
